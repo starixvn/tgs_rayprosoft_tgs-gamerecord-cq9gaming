@@ -1,0 +1,6 @@
+@Tgs.GameRecord.CQ9Gaming_HostAddress = http://localhost:5007
+
+GET {{Tgs.GameRecord.CQ9Gaming_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

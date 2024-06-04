@@ -1,0 +1,33 @@
+﻿using System.Text;
+using System.Text.Json;
+using Tgs.GameRecord.CQ9Gaming.Common;
+using Tgs.GameRecord.CQ9Gaming.Core;
+using Tgs.GameRecord.CQ9Gaming.Core.ApplicationServices;
+using Valhalla.MessageQueue;
+
+namespace Tgs.GameRecord.CQ9Gaming.Messages;
+
+public class ScheduleMessageHandler(
+	ILogger<ScheduleMessageHandler> logger,
+	IPullRecordDispatcher dispatcher) : IMessageHandler<ReadOnlyMemory<byte>>
+{
+	public ValueTask HandleAsync(string subject, ReadOnlyMemory<byte> data, IEnumerable<MessageHeaderValue>? headerValues, CancellationToken cancellationToken = default)
+	{
+		var json = Encoding.UTF8.GetString(data.Span);
+		var message = JsonSerializer.Deserialize<CQ9GamingGameRecordMessage>(json)
+			?? throw new NullReferenceException("The request data resolves to a null value");
+
+		logger.LogInformation("LogOn:{logOn} Subject:{subject} Information Request:{message}",
+			DateTime.Now.ToString("o"),
+			subject,
+			message);
+
+		return dispatcher.PushCommandAsync(
+			command: new PullRecordCommand(
+			ApiUrl: message.ApiUrl,
+			ApiToken: message.ApiToken,
+			StartTime: message.StartTime,
+			EndTime: message.EndTime),
+			cancellationToken: cancellationToken);
+	}
+}
