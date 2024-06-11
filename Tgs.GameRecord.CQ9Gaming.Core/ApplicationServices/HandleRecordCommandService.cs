@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.WellKnownTypes;
+﻿using System.Text.Json;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tgs.ServiceUtility;
@@ -50,12 +51,14 @@ internal class HandleRecordCommandService(
 			subject: Handle.Common.GameRecordHandleNatsConst.GameRecordHandleRequest,
 			data: request,
 			cancellationToken: cancellationToken)
-				.ConfigureAwait(false);
+			.ConfigureAwait(false);
 
-		logger.LogInformation("LogOn:{logOn} Subject:{subject} Mesaage:This publication requests information.({request})",
-				DateTime.Now.ToString("o"),
-				Handle.Common.GameRecordHandleNatsConst.GameRecordHandleRequest,
-				new
+		logger.LogInformation("{logInformation}",
+			JsonSerializer.Serialize(new
+			{
+				LogOn = DateTime.Now.ToString("u"),
+				Subject = Handle.Common.GameRecordHandleNatsConst.GameRecordHandleRequest,
+				Data = new
 				{
 					request.GameProviderCode,
 					request.PlayerCode,
@@ -65,6 +68,9 @@ internal class HandleRecordCommandService(
 					ExternalCreatedOn = request.ExternalCreatedOn.ToDateTimeOffset(),
 					ExternalClosedOn = request.ExternalClosedOn.ToDateTimeOffset(),
 					request.BetState
-				});
+				},
+				Message = "This publish message."
+			}));
+
 	}
 }

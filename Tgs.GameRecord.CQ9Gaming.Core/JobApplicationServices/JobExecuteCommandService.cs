@@ -20,7 +20,7 @@ internal class JobExecuteCommandService(
 		? options.Value.IntervalMinutesMinimum
 		: options.Value.IntervalMinutes;
 
-	public async ValueTask ExecuteAsync(JobExecuteCommand command, CancellationToken cancellationToken = default)
+	public ValueTask ExecuteAsync(JobExecuteCommand command, CancellationToken cancellationToken = default)
 	{
 		var currentTime = timeProvider.GetUtcNow();
 
@@ -35,12 +35,24 @@ internal class JobExecuteCommandService(
 			EndTime = endTime
 		};
 
-		logger.LogDebug("LogOn:{logOn} Parameters:{parameters}", DateTime.Now.ToString("u"), message);
+		logger.LogInformation("{logInformation}",
+			JsonSerializer.Serialize(new
+			{
+				LogOn = DateTime.Now.ToString("u"),
+				Subject = CQ9GamingNatsConst.SchedulePublish,
+				Data = new
+				{
+					message.ApiUrl,
+					message.ApiToken,
+					StartTime = message.StartTime.ToString("u"),
+					EndTime = message.EndTime.ToString("u"),
+				},
+				Message = "This publish message."
+			}));
 
-		await messageSender.PublishAsync(
+		return messageSender.PublishAsync(
 			subject: CQ9GamingNatsConst.SchedulePublish,
 			data: Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message)),
-			cancellationToken: cancellationToken)
-			.ConfigureAwait(false);
+			cancellationToken: cancellationToken);
 	}
 }

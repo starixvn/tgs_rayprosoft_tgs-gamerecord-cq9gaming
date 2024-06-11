@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Tgs.GameInterface.CQ9Gaming.Client;
 using Tgs.GameInterface.CQ9Gaming.Protos;
 using Tgs.ServiceUtility;
@@ -31,8 +32,6 @@ internal class PullRecordCommandService(
 				?? Enumerable.Empty<GameRecordInfo>();
 			foreach (var gameRecord in gameRecords)
 			{
-				logger.LogInformation("LogOn:{logOn} GameWager:{gameWager}", DateTime.Now.ToString("o"), gameRecord);
-
 				try
 				{
 					await service.ExecuteAsync(
@@ -42,7 +41,20 @@ internal class PullRecordCommandService(
 				}
 				catch (Exception ex)
 				{
-					logger.LogError(ex, "LogOn:{logOn} Message: An exception occurred in this game wager.({gameWager})", DateTime.Now.ToString("o"), gameRecord);
+					logger.LogError(ex, "{logError}",
+						JsonSerializer.Serialize(new
+						{
+							LogOn = DateTime.Now.ToString("u"),
+							Data = new
+							{
+								gameRecord.PlayerCode,
+								gameRecord.ExternalBetId,
+								ExternalCreatedOn = gameRecord.ExternalCreatedOn.ToDateTimeOffset(),
+								ExternalClosedOn = gameRecord.ExternalClosedOn.ToDateTimeOffset()
+							},
+							Message = "An exception occurred in this game wager."
+						}));
+
 				}
 			}
 

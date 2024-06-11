@@ -17,10 +17,20 @@ public class ManualMessageHandler(
 		var message = JsonSerializer.Deserialize<CQ9GamingGameRecordMessage>(json)
 			?? throw new NullReferenceException("The request data resolves to a null value");
 
-		logger.LogInformation("LogOn:{logOn} Subject:{subject} Information Request:{message}",
-			DateTime.Now.ToString("o"),
-			subject,
-			message);
+		logger.LogInformation("{logInformation}",
+			JsonSerializer.Serialize(new
+			{
+				LogOn = DateTime.Now.ToString("u"),
+				Subject = subject,
+				Data = new
+				{
+					message.ApiUrl,
+					message.ApiToken,
+					StartTime = message.StartTime.ToString("u"),
+					EndTime = message.EndTime.ToString("u"),
+				},
+				Message = "This receive message handler."
+			}));
 
 		return dispatcher.PushCommandAsync(
 			command: new PullRecordCommand(

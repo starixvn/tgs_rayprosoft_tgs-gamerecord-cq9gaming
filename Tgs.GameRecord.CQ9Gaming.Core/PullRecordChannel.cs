@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ namespace Tgs.GameRecord.CQ9Gaming.Core;
 internal class PullRecordChannel(
 	ILogger<PullRecordChannel> logger,
 	IServiceProvider serviceProvider,
-	string playerCode) : IDisposable, IAsyncDisposable
+	string key) : IDisposable, IAsyncDisposable
 {
 	private static readonly ActivitySource _ActivitySource = new(name: typeof(PullRecordChannel).FullName!);
 
@@ -29,7 +30,7 @@ internal class PullRecordChannel(
 
 	public event EventHandler? Disposed;
 
-	public string PlayerCode { get; } = playerCode;
+	public string Key { get; } = key;
 
 	~PullRecordChannel()
 	{
@@ -123,6 +124,20 @@ internal class PullRecordChannel(
 					parentContext: default);
 				try
 				{
+					logger.LogInformation("{logInformation}",
+						JsonSerializer.Serialize(new
+						{
+							LogOn = DateTime.Now.ToString("u"),
+							Data = new
+							{
+								command.ApiUrl,
+								command.ApiToken,
+								StartTime = command.StartTime.ToString("u"),
+								EndTime = command.EndTime.ToString("u"),
+							},
+							Message = "This pull record command."
+						}));
+
 					using var scope = serviceProvider.CreateScope();
 					var service = scope.ServiceProvider.GetRequiredService<ICommandService<PullRecordCommand>>();
 					await service.ExecuteAsync(
@@ -132,7 +147,20 @@ internal class PullRecordChannel(
 				}
 				catch (Exception ex)
 				{
-					logger.LogError(ex, "Process command occur errors.");
+					logger.LogError(ex, "{logError}",
+						JsonSerializer.Serialize(new
+						{
+							LogOn = DateTime.Now.ToString("u"),
+							Data = new
+							{
+								command.ApiUrl,
+								command.ApiToken,
+								StartTime = command.StartTime.ToString("u"),
+								EndTime = command.EndTime.ToString("u"),
+							},
+							Message = "This pull record command exception occurs."
+						}));
+
 				}
 			}
 		}
