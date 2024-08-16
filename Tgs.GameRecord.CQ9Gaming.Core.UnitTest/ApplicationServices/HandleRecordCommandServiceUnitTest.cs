@@ -6,7 +6,6 @@ using NSubstitute;
 using Tgs.GameInterface.CQ9Gaming.Protos;
 using Tgs.GameRecord.CQ9Gaming.Core.ApplicationServices;
 using Tgs.GameRecord.Handle.Client;
-using Valhalla.MessageQueue;
 
 namespace Tgs.GameRecord.CQ9Gaming.Core.UnitTest.ApplicationServices;
 
