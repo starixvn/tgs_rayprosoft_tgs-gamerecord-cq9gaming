@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using Tgs.GameInterface.CQ9Gaming.Protos;
 using Tgs.GameRecord.CQ9Gaming.Core.ApplicationServices;
-using Valhalla.MessageQueue;
+using Tgs.GameRecord.Handle.Client;
 
 namespace Tgs.GameRecord.CQ9Gaming.Core.UnitTest.ApplicationServices;
 
@@ -15,7 +15,7 @@ public class HandleRecordCommandServiceUnitTest
 	public async Task Win()
 	{
 		var faceLogger = NullLogger<HandleRecordCommandService>.Instance;
-		var gameRecordInfo = Options.Create(new GameRecordInfoOptions
+		var fakeGameRecordInfoOptions = Options.Create(new GameRecordInfoOptions
 		{
 			GameProviderCode = "CQ9",
 			GameProviderConfiguration = "CQ9Configuration",
@@ -25,7 +25,12 @@ public class HandleRecordCommandServiceUnitTest
 			IntervalMinutesMax = 60d,
 			IntervalMinutesMinimum = 1d
 		});
-		var fakeMessageSender = Substitute.For<IMessageSender>();
+		var fakePolicySettingsOptions = Options.Create(new PolicySettingsOptions
+		{
+			RetryCount = 1,
+			RetrySeconds = 1,
+		});
+		var fakeGameRecordHandleClient = Substitute.For<IGameRecordHandleClient>();
 
 		var command = new HandleRecordCommand(
 			GameRecord: new GameRecordInfo
@@ -116,50 +121,50 @@ public class HandleRecordCommandServiceUnitTest
 
 		var service = new HandleRecordCommandService(
 			faceLogger,
-			gameRecordInfo,
-			fakeMessageSender);
+			fakeGameRecordInfoOptions,
+			fakePolicySettingsOptions,
+			fakeGameRecordHandleClient);
 
 		await service.ExecuteAsync(command);
 
-		_ = fakeMessageSender
+		_ = fakeGameRecordHandleClient
 			.Received(1)
-				.PublishAsync(
-				subject: Arg.Is(Handle.Common.GameRecordHandleNatsConst.GameRecordHandleRequest),
-				data: Arg.Is(new Handle.Common.Protos.GameRecordHandleRequest
-				{
-					GameProviderCode = gameRecordInfo.Value.GameProviderCode,
-					PlayerCode = command.GameRecord.PlayerCode,
-					ExternalRoundId = command.GameRecord.ExternalRoundId,
-					ExternalBetId = command.GameRecord.ExternalBetId,
-					ExternalGameId = command.GameRecord.ExternalGameId,
-					ExternalCreatedOn = command.GameRecord.ExternalCreatedOn,
-					ExternalClosedOn = command.GameRecord.ExternalClosedOn,
-					ExternalPayoffOn = command.GameRecord.ExternalClosedOn,
-					ExternalResettleOn = DateTimeOffset.UnixEpoch.ToTimestamp(),
-					BetState = Handle.Common.Protos.BetState.Win,
-					BetType = Handle.Common.Protos.BetType.Normal,
-					FreeGameState = Handle.Common.Protos.FreeGameState.None,
-					GambleState = Handle.Common.Protos.GambleState.None,
-					CashoutState = Handle.Common.Protos.CashoutState.None,
-					ResettleState = Handle.Common.Protos.ResettleState.None,
-					JackpotState = Handle.Common.Protos.JackpotState.None,
-					Bet = command.GameRecord.Bet.ToDecimal().GetValueOrDefault(0),
-					ValidBet = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
-					Settle = command.GameRecord.Settle.ToDecimal().GetValueOrDefault(0),
-					Commission = 0.0m,
-					Turnover = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
-					WinLoss = command.GameRecord.WinLoss.ToDecimal().GetValueOrDefault(0),
-					Jackpot = command.GameRecord.Jackpot.ToDecimal().GetValueOrDefault(0),
-					AdditionalData = command.GameRecord.AdditionalData
-				}),
-				cancellationToken: Arg.Any<CancellationToken>());
+			.HandleAsync(
+			source: Arg.Is(new Handle.Common.ViewModels.GameRecordHandleViewModel
+			{
+				GameProviderCode = fakeGameRecordInfoOptions.Value.GameProviderCode,
+				PlayerCode = command.GameRecord.PlayerCode,
+				ExternalRoundId = command.GameRecord.ExternalRoundId,
+				ExternalBetId = command.GameRecord.ExternalBetId,
+				ExternalGameId = command.GameRecord.ExternalGameId,
+				ExternalCreatedOn = command.GameRecord.ExternalCreatedOn.ToDateTimeOffset(),
+				ExternalClosedOn = command.GameRecord.ExternalClosedOn.ToDateTimeOffset(),
+				ExternalPayoffOn = command.GameRecord.ExternalClosedOn.ToDateTimeOffset(),
+				ExternalResettleOn = DateTimeOffset.UnixEpoch,
+				BetState = Handle.Common.Protos.BetState.Win,
+				BetType = Handle.Common.Protos.BetType.Normal,
+				FreeGameState = Handle.Common.Protos.FreeGameState.None,
+				GambleState = Handle.Common.Protos.GambleState.None,
+				CashoutState = Handle.Common.Protos.CashoutState.None,
+				ResettleState = Handle.Common.Protos.ResettleState.None,
+				JackpotState = Handle.Common.Protos.JackpotState.None,
+				Bet = command.GameRecord.Bet.ToDecimal().GetValueOrDefault(0),
+				ValidBet = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
+				Settle = command.GameRecord.Settle.ToDecimal().GetValueOrDefault(0),
+				Commission = 0.0m,
+				Turnover = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
+				WinLoss = command.GameRecord.WinLoss.ToDecimal().GetValueOrDefault(0),
+				Jackpot = command.GameRecord.Jackpot.ToDecimal().GetValueOrDefault(0),
+				AdditionalData = command.GameRecord.AdditionalData
+			}),
+			cancellationToken: Arg.Any<CancellationToken>());
 	}
 
 	[Fact]
 	public async Task Freegame()
 	{
 		var faceLogger = NullLogger<HandleRecordCommandService>.Instance;
-		var gameRecordInfo = Options.Create(new GameRecordInfoOptions
+		var fakeGameRecordInfoOptions = Options.Create(new GameRecordInfoOptions
 		{
 			GameProviderCode = "CQ9",
 			GameProviderConfiguration = "CQ9Configuration",
@@ -169,7 +174,12 @@ public class HandleRecordCommandServiceUnitTest
 			IntervalMinutesMax = 60d,
 			IntervalMinutesMinimum = 1d
 		});
-		var fakeMessageSender = Substitute.For<IMessageSender>();
+		var fakePolicySettingsOptions = Options.Create(new PolicySettingsOptions
+		{
+			RetryCount = 1,
+			RetrySeconds = 1,
+		});
+		var fakeGameRecordHandleClient = Substitute.For<IGameRecordHandleClient>();
 
 		var command = new HandleRecordCommand(
 			GameRecord: new GameRecordInfo
@@ -238,42 +248,42 @@ public class HandleRecordCommandServiceUnitTest
 
 		var service = new HandleRecordCommandService(
 			faceLogger,
-			gameRecordInfo,
-			fakeMessageSender);
+			fakeGameRecordInfoOptions,
+			fakePolicySettingsOptions,
+			fakeGameRecordHandleClient);
 
 		await service.ExecuteAsync(command);
 
-		_ = fakeMessageSender
+		_ = fakeGameRecordHandleClient
 			.Received(1)
-				.PublishAsync(
-				subject: Arg.Is(Handle.Common.GameRecordHandleNatsConst.GameRecordHandleRequest),
-				data: Arg.Is(new Handle.Common.Protos.GameRecordHandleRequest
-				{
-					GameProviderCode = gameRecordInfo.Value.GameProviderCode,
-					PlayerCode = command.GameRecord.PlayerCode,
-					ExternalRoundId = command.GameRecord.ExternalRoundId,
-					ExternalBetId = command.GameRecord.ExternalBetId,
-					ExternalGameId = command.GameRecord.ExternalGameId,
-					ExternalCreatedOn = command.GameRecord.ExternalCreatedOn,
-					ExternalClosedOn = command.GameRecord.ExternalClosedOn,
-					ExternalPayoffOn = command.GameRecord.ExternalClosedOn,
-					ExternalResettleOn = DateTimeOffset.UnixEpoch.ToTimestamp(),
-					BetState = Handle.Common.Protos.BetState.Win,
-					BetType = Handle.Common.Protos.BetType.Normal,
-					FreeGameState = Handle.Common.Protos.FreeGameState.FreeGame,
-					GambleState = Handle.Common.Protos.GambleState.None,
-					CashoutState = Handle.Common.Protos.CashoutState.None,
-					ResettleState = Handle.Common.Protos.ResettleState.None,
-					JackpotState = Handle.Common.Protos.JackpotState.None,
-					Bet = command.GameRecord.Bet.ToDecimal().GetValueOrDefault(0),
-					ValidBet = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
-					Settle = command.GameRecord.Settle.ToDecimal().GetValueOrDefault(0),
-					Commission = 0.0m,
-					Turnover = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
-					WinLoss = command.GameRecord.WinLoss.ToDecimal().GetValueOrDefault(0),
-					Jackpot = command.GameRecord.Jackpot.ToDecimal().GetValueOrDefault(0),
-					AdditionalData = command.GameRecord.AdditionalData
-				}),
-				cancellationToken: Arg.Any<CancellationToken>());
+			.HandleAsync(
+			source: Arg.Is(new Handle.Common.ViewModels.GameRecordHandleViewModel
+			{
+				GameProviderCode = fakeGameRecordInfoOptions.Value.GameProviderCode,
+				PlayerCode = command.GameRecord.PlayerCode,
+				ExternalRoundId = command.GameRecord.ExternalRoundId,
+				ExternalBetId = command.GameRecord.ExternalBetId,
+				ExternalGameId = command.GameRecord.ExternalGameId,
+				ExternalCreatedOn = command.GameRecord.ExternalCreatedOn.ToDateTimeOffset(),
+				ExternalClosedOn = command.GameRecord.ExternalClosedOn.ToDateTimeOffset(),
+				ExternalPayoffOn = command.GameRecord.ExternalClosedOn.ToDateTimeOffset(),
+				ExternalResettleOn = DateTimeOffset.UnixEpoch,
+				BetState = Handle.Common.Protos.BetState.Win,
+				BetType = Handle.Common.Protos.BetType.Normal,
+				FreeGameState = Handle.Common.Protos.FreeGameState.FreeGame,
+				GambleState = Handle.Common.Protos.GambleState.None,
+				CashoutState = Handle.Common.Protos.CashoutState.None,
+				ResettleState = Handle.Common.Protos.ResettleState.None,
+				JackpotState = Handle.Common.Protos.JackpotState.None,
+				Bet = command.GameRecord.Bet.ToDecimal().GetValueOrDefault(0),
+				ValidBet = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
+				Settle = command.GameRecord.Settle.ToDecimal().GetValueOrDefault(0),
+				Commission = 0.0m,
+				Turnover = command.GameRecord.ValidBet.ToDecimal().GetValueOrDefault(0),
+				WinLoss = command.GameRecord.WinLoss.ToDecimal().GetValueOrDefault(0),
+				Jackpot = command.GameRecord.Jackpot.ToDecimal().GetValueOrDefault(0),
+				AdditionalData = command.GameRecord.AdditionalData
+			}),
+			cancellationToken: Arg.Any<CancellationToken>());
 	}
 }

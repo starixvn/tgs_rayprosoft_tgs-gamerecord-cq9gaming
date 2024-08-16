@@ -16,17 +16,6 @@ public class CQ9GamingController : ControllerBase
 	/// <param name="messageSender">The message sender.</param>
 	/// <param name="source">The source.</param>
 	/// <returns></returns>
-	/// <remarks>
-	/// <b>Example</b><br />
-	///
-	///     Post
-	///         {
-	///				"apiUrl": "https://api.cqgame.games/",
-	///				"apiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiI2NjRkNjFkZDc2ZWViMzc2ZDMwYzZlMWUiLCJhY2NvdW50IjoicGdiIiwib3duZXIiOiI2NjRkNjFkZDc2ZWViMzc2ZDMwYzZlMWUiLCJwYXJlbnQiOiJzZWxmIiwiY3VycmVuY3kiOiJDTlkiLCJicmFuZCI6ImNxOSIsImp0aSI6IjUzNjA2NTAyNiIsImlhdCI6MTcxNjM0NzM1NywiaXNzIjoiQ3lwcmVzcyIsInN1YiI6IlNTVG9rZW4ifQ._3At-myRESwuAzQkRX6yd3S9gF0Ax8cjMsJ46J7disE",
-	///				"StartTime": "2024-03-19T03:00:00+00:00",
-	///				"EndTime": "2024-03-19T04:00:00+00:00"
-	///         }
-	/// </remarks>
 	[HttpPost("manual")]
 	public ValueTask GameRecordManualAsync(
 		[FromServices] IMessageSender messageSender,
@@ -42,17 +31,6 @@ public class CQ9GamingController : ControllerBase
 	/// <param name="messageSender">The message sender.</param>
 	/// <param name="source">The source.</param>
 	/// <returns></returns>
-	/// <remarks>
-	/// <b>Example</b><br />
-	///
-	///     Post
-	///         {
-	///				"apiUrl": "https://api.cqgame.games/",
-	///				"apiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiI2NjRkNjFkZDc2ZWViMzc2ZDMwYzZlMWUiLCJhY2NvdW50IjoicGdiIiwib3duZXIiOiI2NjRkNjFkZDc2ZWViMzc2ZDMwYzZlMWUiLCJwYXJlbnQiOiJzZWxmIiwiY3VycmVuY3kiOiJDTlkiLCJicmFuZCI6ImNxOSIsImp0aSI6IjUzNjA2NTAyNiIsImlhdCI6MTcxNjM0NzM1NywiaXNzIjoiQ3lwcmVzcyIsInN1YiI6IlNTVG9rZW4ifQ._3At-myRESwuAzQkRX6yd3S9gF0Ax8cjMsJ46J7disE",
-	///				"StartTime": "2024-03-19T03:00:00+00:00",
-	///				"EndTime": "2024-03-19T04:00:00+00:00"
-	///         }
-	/// </remarks>
 	[HttpPost("schedule")]
 	public ValueTask GameRecordScheduleAsync(
 		[FromServices] IMessageSender messageSender,

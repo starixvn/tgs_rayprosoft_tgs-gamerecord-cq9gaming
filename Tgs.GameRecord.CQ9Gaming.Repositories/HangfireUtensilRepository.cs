@@ -1,12 +1,13 @@
-﻿using Tgs.GameRecord.CQ9Gaming.Core.JobApplicationServices;
+﻿using Tgs.GameRecord.CQ9Gaming.Core;
+using Tgs.GameRecord.CQ9Gaming.Core.JobApplicationServices;
 using Tgs.ServiceUtility;
 
-namespace Tgs.GameRecord.CQ9Gaming.Core;
+namespace Tgs.GameRecord.CQ9Gaming.Repositories;
 
-internal class HangfireUtensil(
+internal class HangfireUtensilRepository(
 	ICommandService<JobCheckCommand> jobCheckService,
 	ICommandService<JobExecuteCommand> jobExecuteService,
-	ICommandService<JobInitCommand> jobInitservice) : IHangfireUtensil
+	ICommandService<JobInitCommand> jobInitservice) : IHangfireUtensilRepository
 {
 	public Task JobCheckAsync()
 		=> jobCheckService.ExecuteAsync(new()).AsTask();
