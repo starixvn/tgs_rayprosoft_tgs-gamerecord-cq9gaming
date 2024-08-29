@@ -54,7 +54,6 @@ internal class PullRecordCommandService(
 							},
 							Message = "An exception occurred in this game wager."
 						}));
-
 				}
 			}
 
