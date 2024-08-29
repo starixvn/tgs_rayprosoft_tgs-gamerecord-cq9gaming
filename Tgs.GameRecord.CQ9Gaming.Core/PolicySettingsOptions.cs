@@ -1,4 +1,4 @@
-namespace Tgs.GameRecord.CQ9Gaming.Core;
+﻿namespace Tgs.GameRecord.CQ9Gaming.Core;
 
 public record PolicySettingsOptions
 {

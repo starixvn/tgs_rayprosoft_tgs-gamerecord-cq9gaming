@@ -160,7 +160,6 @@ internal class PullRecordChannel(
 							},
 							Message = "This pull record command exception occurs."
 						}));
-
 				}
 			}
 		}
